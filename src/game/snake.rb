@@ -52,28 +52,35 @@ draw_tile(@food_x, @food_y, tile_food)
 
 # Main game loop
 while @running == 1
-  # Read input and update direction
-  input = read_joypad
+  # Wait for frames and poll input each frame
+  frame_count = 0
+  while frame_count < frame_delay
+    wait_vbl
 
-  if input == dir_up
-    if @direction != dir_down
-      @direction = dir_up
+    # Read input every frame for responsiveness
+    input = read_joypad
+    if input == dir_up
+      if @direction != dir_down
+        @direction = dir_up
+      end
     end
-  end
-  if input == dir_down
-    if @direction != dir_up
-      @direction = dir_down
+    if input == dir_down
+      if @direction != dir_up
+        @direction = dir_down
+      end
     end
-  end
-  if input == dir_left
-    if @direction != dir_right
-      @direction = dir_left
+    if input == dir_left
+      if @direction != dir_right
+        @direction = dir_left
+      end
     end
-  end
-  if input == dir_right
-    if @direction != dir_left
-      @direction = dir_right
+    if input == dir_right
+      if @direction != dir_left
+        @direction = dir_right
+      end
     end
+
+    frame_count = frame_count + 1
   end
 
   # Calculate new head position
@@ -183,13 +190,6 @@ while @running == 1
       end
       draw_tile(@food_x, @food_y, tile_food)
     end
-  end
-
-  # Wait for multiple frames (speed control)
-  frame_count = 0
-  while frame_count < frame_delay
-    wait_vbl
-    frame_count = frame_count + 1
   end
 end
 

@@ -56,18 +56,6 @@ clean:
 	rm -f *.gb *.map *.sym *.o *.asm *.lst
 	rm -f src/game/*.ruby.c
 
-# Desktop test (native compile, no GBDK)
-test-native: src/game/test.ruby.c
-	cc -DMRBZ_NATIVE_TEST -DMRBZ_DEBUG=1 -Isrc -o test-native \
-		src/mrbz/vm.c src/mrbz/builtins.c src/native/main.c
-	./test-native
-
-# Snake native test
-snake-native: src/game/snake.ruby.c
-	cc -DMRBZ_NATIVE_TEST -DUSE_SNAKE -DMRBZ_DEBUG=1 -Isrc -o snake-native \
-		src/mrbz/vm.c src/mrbz/builtins.c src/native/main.c
-	./snake-native 2>&1 | head -100
-
 # Test Ruby bytecode compilation only
 test-mrbc:
 	@echo "Testing mrbc..."

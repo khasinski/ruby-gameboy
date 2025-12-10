@@ -15,13 +15,14 @@
 #define SYM_LEFT  3
 #define SYM_RIGHT 4
 
-// Tile IDs
-#define TILE_EMPTY 0
-#define TILE_HEAD  1
-#define TILE_BODY  2
-#define TILE_FOOD  3
-#define TILE_DIGIT_0 4
-// ... TILE_DIGIT_9 = 13
+// Game tiles start at offset 128 to preserve font tiles for printf
+#define TILE_OFFSET 128
+
+// Tile IDs (add TILE_OFFSET when using)
+#define TILE_EMPTY (TILE_OFFSET + 0)
+#define TILE_HEAD  (TILE_OFFSET + 1)
+#define TILE_BODY  (TILE_OFFSET + 2)
+#define TILE_FOOD  (TILE_OFFSET + 3)
 
 // Initialize platform
 void gb_platform_init(void);

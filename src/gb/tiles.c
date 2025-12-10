@@ -81,7 +81,10 @@ const uint8_t tile_data[] = {
 
 const uint8_t num_tiles = 14;  // 0-13
 
-// Load tiles into VRAM
+// Game tiles start at offset 128 to avoid overwriting font tiles
+#define GAME_TILE_OFFSET 128
+
+// Load tiles into VRAM (at offset to preserve font)
 void load_game_tiles(void) {
-    set_bkg_data(0, num_tiles, tile_data);
+    set_bkg_data(GAME_TILE_OFFSET, num_tiles, tile_data);
 }

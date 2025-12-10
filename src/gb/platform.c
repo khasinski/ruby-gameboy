@@ -83,10 +83,10 @@ void gb_game_over(mrbz_vm* vm, int16_t score, mrbz_value* ret) {
 
     (void)vm;
 
-    // Clear screen
+    // Clear screen with space character (0x00) for printf to work
     for (y = 0; y < 18; y++) {
         for (x = 0; x < 20; x++) {
-            set_bkg_tile_xy(x, y, TILE_EMPTY);
+            set_bkg_tile_xy(x, y, 0);
         }
     }
 

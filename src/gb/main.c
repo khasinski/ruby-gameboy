@@ -43,6 +43,15 @@ void main(void) {
 
     mrbz_vm_init(&vm);
 
+#ifdef USE_SNAKE
+    // Clear screen before starting game (remove startup text)
+    for (uint8_t y = 0; y < 18; y++) {
+        for (uint8_t x = 0; x < 20; x++) {
+            set_bkg_tile_xy(x, y, 128);  // TILE_EMPTY
+        }
+    }
+#endif
+
     mrbz_vm_run(&vm, &result, GAME_BYTECODE);
 
     // Show result

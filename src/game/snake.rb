@@ -7,11 +7,11 @@ grid_h = 18
 max_snake = 50
 frame_delay = 8  # Wait this many frames between moves
 
-# Tile IDs (must match platform.h)
-tile_empty = 0
-tile_head = 1
-tile_body = 2
-tile_food = 3
+# Tile IDs (must match platform.h - offset 128 for game tiles)
+tile_empty = 128
+tile_head = 129
+tile_body = 130
+tile_food = 131
 
 # Direction constants: 0=none, 1=up, 2=down, 3=left, 4=right
 dir_none = 0

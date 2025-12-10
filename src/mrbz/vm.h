@@ -15,8 +15,6 @@
 #define MRBZ_MAX_SYMBOLS   32    // Maximum symbols in pool
 #define MRBZ_MAX_CONSTS    16    // Maximum constants
 #define MRBZ_MAX_IVARS     16    // Maximum instance variables
-#define MRBZ_MAX_METHODS   16    // Maximum method definitions
-#define MRBZ_CALL_STACK    8     // Call stack depth
 
 // Value types
 typedef enum {
@@ -74,23 +72,6 @@ typedef struct {
 // Check if value is truthy (not nil or false)
 #define MRBZ_TRUTHY(v)  ((v).type != MRBZ_T_NIL && (v).type != MRBZ_T_FALSE)
 
-// Get integer value (assumes type is INT)
-#define MRBZ_TO_INT(v)  ((v).v.i)
-
-// A method definition
-typedef struct {
-    uint8_t sym_idx;        // Symbol index of method name
-    uint16_t irep_offset;   // Offset to IREP in bytecode
-    uint8_t argc;           // Number of arguments
-} mrbz_method;
-
-// Call frame for method calls
-typedef struct {
-    uint16_t return_pc;     // Return address
-    uint8_t return_reg;     // Register to store return value
-    uint8_t base_reg;       // Base register for this frame
-} mrbz_call_frame;
-
 // Virtual machine state
 typedef struct {
     // Registers
@@ -115,19 +96,8 @@ typedef struct {
     mrbz_value consts[MRBZ_MAX_CONSTS];  // Values
     uint8_t const_count;
 
-    // Method table
-    mrbz_method methods[MRBZ_MAX_METHODS];
-    uint8_t method_count;
-
-    // Call stack
-    mrbz_call_frame call_stack[MRBZ_CALL_STACK];
-    uint8_t call_depth;
-
-    // Bytecode info (set during parsing)
+    // Bytecode pointer (for symbol table access)
     const uint8_t* bytecode;
-    uint16_t syms_offset;    // Offset to symbol table in bytecode
-    uint16_t pool_offset;    // Offset to pool table in bytecode
-    uint16_t irep_offset;    // Offset to first IREP
 
     // Running state
     uint8_t running;

@@ -6,7 +6,6 @@
 #include "vm.h"
 #include "opcodes.h"
 #include <stdio.h>
-#include <string.h>
 
 // Forward declaration for built-in dispatch (using output param for SDCC)
 extern void mrbz_builtin_call(mrbz_vm* vm, uint8_t sym_idx, uint8_t argc, uint8_t base_reg, mrbz_value* ret);
@@ -30,8 +29,6 @@ void mrbz_vm_init(mrbz_vm* vm) {
     vm->sym_count = 0;
     vm->ivar_count = 0;
     vm->const_count = 0;
-    vm->method_count = 0;
-    vm->call_depth = 0;
     vm->bytecode = 0;
 
     // Clear registers
@@ -61,12 +58,6 @@ const char* mrbz_get_symbol(mrbz_vm* vm, uint8_t idx) {
 // Read 16-bit value from bytecode (big-endian)
 static uint16_t read_u16(const uint8_t* p) {
     return ((uint16_t)p[0] << 8) | (uint16_t)p[1];
-}
-
-// Read 32-bit value from bytecode (big-endian)
-static uint32_t read_u32(const uint8_t* p) {
-    return ((uint32_t)p[0] << 24) | ((uint32_t)p[1] << 16) |
-           ((uint32_t)p[2] << 8) | (uint32_t)p[3];
 }
 
 // Parse symbol table from bytecode

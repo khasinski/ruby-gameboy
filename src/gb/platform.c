@@ -93,10 +93,10 @@ void gb_game_over(mrbz_vm* vm, int16_t score, mrbz_value* ret) {
     // Display "GAME OVER" using printf
     printf("\n\n\n   GAME OVER\n\n   Score: %d\n", score);
 
+    MRBZ_SET_NIL(*ret);
+
     // Halt forever
     while (1) {
         wait_vbl_done();
     }
-
-    MRBZ_SET_NIL(*ret);
 }

@@ -7,7 +7,7 @@ MRBC = mrbc
 CFLAGS = -Wa-l -Wl-m -Wl-j -Isrc
 
 # Source files
-VM_SRCS = src/mrbz/vm.c src/mrbz/value.c src/mrbz/builtins.c
+VM_SRCS = src/mrbz/vm.c src/mrbz/builtins.c
 GB_SRCS = src/gb/main.c src/gb/platform.c src/gb/tiles.c
 
 .PHONY: all clean run hello test test-vm
@@ -59,15 +59,13 @@ clean:
 # Desktop test (native compile, no GBDK)
 test-native: src/game/test.ruby.c
 	cc -DMRBZ_NATIVE_TEST -DMRBZ_DEBUG=1 -Isrc -o test-native \
-		src/mrbz/vm.c src/mrbz/value.c src/mrbz/builtins.c \
-		src/native/main.c
+		src/mrbz/vm.c src/mrbz/builtins.c src/native/main.c
 	./test-native
 
 # Snake native test
 snake-native: src/game/snake.ruby.c
 	cc -DMRBZ_NATIVE_TEST -DUSE_SNAKE -DMRBZ_DEBUG=1 -Isrc -o snake-native \
-		src/mrbz/vm.c src/mrbz/value.c src/mrbz/builtins.c \
-		src/native/main.c
+		src/mrbz/vm.c src/mrbz/builtins.c src/native/main.c
 	./snake-native 2>&1 | head -100
 
 # Test Ruby bytecode compilation only

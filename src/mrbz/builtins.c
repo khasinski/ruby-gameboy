@@ -5,7 +5,6 @@
 
 #include "vm.h"
 #include <stdio.h>
-#include <string.h>
 
 // Forward declarations from platform layer (using output params for SDCC)
 extern void gb_read_joypad(mrbz_vm* vm, mrbz_value* ret);

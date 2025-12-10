@@ -56,10 +56,6 @@ open -a mGBA snake.gb
 ```bash
 # Build test ROM (simple arithmetic test)
 make test.gb
-
-# Run native desktop test (for debugging)
-make test-native
-make snake-native
 ```
 
 ## How It Works
@@ -94,11 +90,9 @@ src/
 │   ├── platform.c  # Hardware abstraction
 │   ├── platform.h  # Platform API
 │   └── tiles.c     # Tile graphics
-├── game/           # Game code
-│   ├── snake.rb    # Snake game in Ruby
-│   └── test.rb     # Simple test program
-└── native/         # Desktop test harness
-    └── main.c
+└── game/           # Game code
+    ├── snake.rb    # Snake game in Ruby
+    └── test.rb     # Simple test program
 ```
 
 ## The Snake Game

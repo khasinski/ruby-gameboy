@@ -51,13 +51,6 @@ make run
 open -a mGBA snake.gb
 ```
 
-### Other targets
-
-```bash
-# Build test ROM (simple arithmetic test)
-make test.gb
-```
-
 ## How It Works
 
 ```
@@ -83,7 +76,6 @@ src/
 │   ├── vm.c        # Bytecode interpreter
 │   ├── vm.h        # VM structures and macros
 │   ├── opcodes.h   # Opcode definitions
-│   ├── value.c     # Value type helpers
 │   └── builtins.c  # Built-in function dispatch
 ├── gb/             # Game Boy platform layer
 │   ├── main.c      # Entry point
@@ -91,8 +83,7 @@ src/
 │   ├── platform.h  # Platform API
 │   └── tiles.c     # Tile graphics
 └── game/           # Game code
-    ├── snake.rb    # Snake game in Ruby
-    └── test.rb     # Simple test program
+    └── snake.rb    # Snake game in Ruby
 ```
 
 ## The Snake Game

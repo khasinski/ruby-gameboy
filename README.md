@@ -1,12 +1,12 @@
 # mrbz - Ruby on Game Boy
 
-A minimal Ruby virtual machine that runs mruby bytecode on Game Boy hardware. Includes a playable Snake game written entirely in Ruby.
+A minimal Ruby virtual machine that runs mruby bytecode on Game Boy hardware. Includes a playable Snake game written in Ruby.
 
 ![Snake game running on Game Boy](snake.png)
 
 ## About
 
-This project was inspired by [mrubyz](https://github.com/yujiyokoo/mrubyz), a minimal mruby VM for Sega Master System. mrbz adapts and extends this concept for the Game Boy platform.
+This project was inspired by [mrubyz](https://github.com/yujiyokoo/mrubyz), a minimal mruby VM for Z80, most notably - Sega Master System. mrbz adapts and extends this concept for the Game Boy platform.
 
 The VM interprets mruby bytecode compiled by `mrbc`, enabling Ruby code to run on original Game Boy hardware (or emulators).
 

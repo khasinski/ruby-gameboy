@@ -5,7 +5,6 @@
 
 #include "vm.h"
 #include "opcodes.h"
-#include <stdio.h>
 
 // Forward declaration for built-in dispatch (using output param for SDCC)
 extern void mrbz_builtin_call(mrbz_vm* vm, uint8_t sym_idx, uint8_t argc, uint8_t base_reg, mrbz_value* ret);
@@ -16,6 +15,7 @@ extern void mrbz_builtin_call(mrbz_vm* vm, uint8_t sym_idx, uint8_t argc, uint8_
 #endif
 
 #if MRBZ_DEBUG
+#include <stdio.h>
 #define DBG_PRINT(...) printf(__VA_ARGS__)
 #else
 #define DBG_PRINT(...)
@@ -85,19 +85,6 @@ static void parse_symbols(mrbz_vm* vm, uint16_t offset) {
     vm->sym_count = (i < count) ? i : count;
 }
 
-// Print a value (for debugging)
-void mrbz_print_value(mrbz_value v) {
-    switch (v.type) {
-        case MRBZ_T_NIL:   printf("nil"); break;
-        case MRBZ_T_TRUE:  printf("true"); break;
-        case MRBZ_T_FALSE: printf("false"); break;
-        case MRBZ_T_INT:   printf("%d", v.v.i); break;
-        case MRBZ_T_SYMBOL: printf(":sym%d", v.v.sym); break;
-        case MRBZ_T_ARRAY: printf("[arr#%d]", v.v.arr); break;
-        default: printf("?"); break;
-    }
-}
-
 // Compare two values for equality
 static uint8_t values_equal(mrbz_value a, mrbz_value b) {
     if (a.type != b.type) return 0;
@@ -121,7 +108,6 @@ static uint8_t values_equal(mrbz_value a, mrbz_value b) {
 static uint8_t alloc_array(mrbz_vm* vm) {
     uint8_t idx;
     if (vm->next_array >= MRBZ_MAX_ARRAYS) {
-        printf("ERR: arrays full\n");
         return 0;
     }
     idx = vm->next_array;
@@ -200,7 +186,6 @@ void mrbz_vm_run(mrbz_vm* vm, mrbz_value* result, const uint8_t* bytecode) {
 
         // Bounds check
         if (op > 0x69) {
-            printf("Bad OP: 0x%02X at %d\n", op, pc-1);
             vm->running = 0;
             MRBZ_SET_NIL(*result);
             break;
@@ -319,7 +304,6 @@ void mrbz_vm_run(mrbz_vm* vm, mrbz_value* result, const uint8_t* bytecode) {
             case OP_DIV:
                 a = bytecode[pc++];
                 if (vm->regs[a+1].v.i == 0) {
-                    printf("ERR: div/0\n");
                     MRBZ_SET_INT(vm->regs[a], 0);
                 } else {
                     val = vm->regs[a].v.i / vm->regs[a+1].v.i;
@@ -607,7 +591,6 @@ void mrbz_vm_run(mrbz_vm* vm, mrbz_value* result, const uint8_t* bytecode) {
                 break;
 
             default:
-                printf("UNK OP: 0x%02X\n", op);
                 vm->running = 0;
                 MRBZ_SET_NIL(*result);
                 break;

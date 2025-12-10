@@ -4,7 +4,6 @@
  */
 
 #include "vm.h"
-#include <stdio.h>
 
 // Forward declarations from platform layer (using output params for SDCC)
 extern void gb_read_joypad(mrbz_vm* vm, mrbz_value* ret);
@@ -37,7 +36,6 @@ void mrbz_builtin_call(mrbz_vm* vm, uint8_t sym_idx, uint8_t argc, uint8_t base_
     // Get symbol name
     name = mrbz_get_symbol(vm, sym_idx);
     if (name == 0) {
-        printf("No sym %d\n", sym_idx);
         return;
     }
 
@@ -77,13 +75,6 @@ void mrbz_builtin_call(mrbz_vm* vm, uint8_t sym_idx, uint8_t argc, uint8_t base_
             gb_game_over(vm, 0, ret);
         }
     }
-    else if (str_eq(name, "puts") || str_eq(name, "p")) {
-        if (argc >= 1) {
-            printf("puts: ");
-            mrbz_print_value(vm->regs[base_reg]);
-            printf("\n");
-        }
-    }
     else if (str_eq(name, "new")) {
         // Array.new(size, default) - called on Array class
         if (argc >= 2) {
@@ -118,8 +109,5 @@ void mrbz_builtin_call(mrbz_vm* vm, uint8_t sym_idx, uint8_t argc, uint8_t base_
             }
         }
     }
-    else {
-        // Unknown - not an error, might be a user-defined method
-        printf("UNK: %s\n", name);
-    }
+    // Unknown methods are silently ignored
 }

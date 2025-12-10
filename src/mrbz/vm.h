@@ -112,7 +112,4 @@ void mrbz_vm_init(mrbz_vm* vm);
 // Run bytecode and get result
 void mrbz_vm_run(mrbz_vm* vm, mrbz_value* result, const uint8_t* bytecode);
 
-// Debug: print a value
-void mrbz_print_value(mrbz_value v);
-
 #endif // MRBZ_VM_H

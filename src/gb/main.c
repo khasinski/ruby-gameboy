@@ -33,33 +33,23 @@ void main(void) {
     // Initialize platform
     gb_platform_init();
 
-    // Show startup message
-    printf("mrbz VM\n");
-    printf("%s\n\n", GAME_NAME);
-
     // Initialize and run VM
     mrbz_vm vm;
     mrbz_value result;
 
     mrbz_vm_init(&vm);
 
-#ifdef USE_SNAKE
-    // Clear screen before starting game (remove startup text)
+    // Clear screen before starting game
     for (uint8_t y = 0; y < 18; y++) {
         for (uint8_t x = 0; x < 20; x++) {
             set_bkg_tile_xy(x, y, 128);  // TILE_EMPTY
         }
     }
-#endif
 
     mrbz_vm_run(&vm, &result, GAME_BYTECODE);
 
-    // Show result
-    printf("\nResult: ");
-    mrbz_print_value(result);
-    printf("\n");
-
-    // Wait forever
+    // VM should not return for snake (game_over halts)
+    // Wait forever as fallback
     while (1) {
         wait_vbl_done();
     }

@@ -25,7 +25,7 @@ DIR_RIGHT = 4
 @food_x = 15
 @food_y = 9
 @score = 0
-@running = 1
+@running = true
 
 # Set initial snake position (horizontal, moving right)
 @snake_x[0] = 10
@@ -45,10 +45,10 @@ end
 draw_tile(@food_x, @food_y, TILE_FOOD)
 
 # Main game loop
-while @running == 1
+while @running
   # Remember last move direction (to prevent reversal)
   prev_dir = @direction
-  turned = 0
+  turned = false
 
   # Wait for frames and poll input each frame
   frame_count = 0
@@ -57,22 +57,22 @@ while @running == 1
     input = read_joypad
 
     # Update direction (can't reverse, only one turn per move)
-    if turned == 0
+    unless turned
       if input == DIR_UP && prev_dir != DIR_DOWN
         @direction = DIR_UP
-        turned = 1
+        turned = true
       end
       if input == DIR_DOWN && prev_dir != DIR_UP
         @direction = DIR_DOWN
-        turned = 1
+        turned = true
       end
       if input == DIR_LEFT && prev_dir != DIR_RIGHT
         @direction = DIR_LEFT
-        turned = 1
+        turned = true
       end
       if input == DIR_RIGHT && prev_dir != DIR_LEFT
         @direction = DIR_RIGHT
-        turned = 1
+        turned = true
       end
     end
 
@@ -89,32 +89,29 @@ while @running == 1
   new_x += 1 if @direction == DIR_RIGHT
 
   # Check wall collision
-  @running = 0 if new_x < 0 || new_x >= GRID_W || new_y < 0 || new_y >= GRID_H
+  @running = false if new_x < 0 || new_x >= GRID_W || new_y < 0 || new_y >= GRID_H
 
   # Check self collision
-  if @running == 1
+  if @running
     i = 0
     while i < @snake_len
-      @running = 0 if @snake_x[i] == new_x && @snake_y[i] == new_y
+      @running = false if @snake_x[i] == new_x && @snake_y[i] == new_y
       i += 1
     end
   end
 
   # Move snake
-  if @running == 1
+  if @running
     # Check if eating food
-    ate_food = 0
-    if new_x == @food_x && new_y == @food_y
-      ate_food = 1
-      @score += 10
-    end
+    ate_food = new_x == @food_x && new_y == @food_y
+    @score += 10 if ate_food
 
     # Clear old tail (unless growing)
-    if ate_food == 0
+    if ate_food
+      @snake_len += 1
+    else
       tail_idx = @snake_len - 1
       clear_tile(@snake_x[tail_idx], @snake_y[tail_idx])
-    else
-      @snake_len += 1
     end
 
     # Shift body segments backward
@@ -134,19 +131,19 @@ while @running == 1
     draw_tile(@snake_x[1], @snake_y[1], TILE_BODY) if @snake_len > 1
 
     # Spawn new food if eaten
-    if ate_food == 1
+    if ate_food
       @food_x = rand(GRID_W)
       @food_y = rand(GRID_H)
       # Simple collision avoidance
       tries = 0
       while tries < 10
-        collision = 0
+        collision = false
         i = 0
         while i < @snake_len
-          collision = 1 if @snake_x[i] == @food_x && @snake_y[i] == @food_y
+          collision = true if @snake_x[i] == @food_x && @snake_y[i] == @food_y
           i += 1
         end
-        if collision == 1
+        if collision
           @food_x = rand(GRID_W)
           @food_y = rand(GRID_H)
         end

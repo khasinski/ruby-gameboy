@@ -24,9 +24,6 @@
 #define TILE_BODY  (TILE_OFFSET + 2)
 #define TILE_FOOD  (TILE_OFFSET + 3)
 
-// Initialize platform
-void gb_platform_init(void);
-
 // Built-in functions (called from builtins.c)
 // Using output parameter instead of return value for SDCC compatibility
 void gb_read_joypad(mrbz_vm* vm, mrbz_value* ret);

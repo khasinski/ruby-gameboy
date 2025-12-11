@@ -24,9 +24,6 @@ void main(void) {
     // Load tile graphics
     load_game_tiles();
 
-    // Initialize platform
-    gb_platform_init();
-
     // Initialize and run VM
     mrbz_vm vm;
     mrbz_value result;

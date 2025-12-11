@@ -11,11 +11,6 @@
 // Random seed
 static uint16_t rand_seed = 12345;
 
-// Initialize platform
-void gb_platform_init(void) {
-    // Additional init can go here
-}
-
 // Read joypad and return direction as symbol
 // Returns: :up, :down, :left, :right, or nil for no input
 void gb_read_joypad(mrbz_vm* vm, mrbz_value* ret) {

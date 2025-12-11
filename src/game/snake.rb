@@ -1,27 +1,27 @@
 # Snake Game for mrbz Game Boy VM
 
 # Constants
-grid_w = 20
-grid_h = 18
-max_snake = 50
-frame_delay = 8
+GRID_W = 20
+GRID_H = 18
+MAX_SNAKE = 50
+FRAME_DELAY = 8
 
 # Tile IDs (offset 128 for game tiles)
-tile_head = 129
-tile_body = 130
-tile_food = 131
+TILE_HEAD = 129
+TILE_BODY = 130
+TILE_FOOD = 131
 
 # Direction constants: 0=none, 1=up, 2=down, 3=left, 4=right
-dir_up = 1
-dir_down = 2
-dir_left = 3
-dir_right = 4
+DIR_UP = 1
+DIR_DOWN = 2
+DIR_LEFT = 3
+DIR_RIGHT = 4
 
 # Initialize game state
-@snake_x = Array.new(max_snake, 0)
-@snake_y = Array.new(max_snake, 0)
+@snake_x = Array.new(MAX_SNAKE, 0)
+@snake_y = Array.new(MAX_SNAKE, 0)
 @snake_len = 3
-@direction = dir_right
+@direction = DIR_RIGHT
 @food_x = 15
 @food_y = 9
 @score = 0
@@ -38,11 +38,11 @@ dir_right = 4
 # Draw initial state
 i = 0
 while i < @snake_len
-  tile = i == 0 ? tile_head : tile_body
+  tile = i == 0 ? TILE_HEAD : TILE_BODY
   draw_tile(@snake_x[i], @snake_y[i], tile)
   i += 1
 end
-draw_tile(@food_x, @food_y, tile_food)
+draw_tile(@food_x, @food_y, TILE_FOOD)
 
 # Main game loop
 while @running == 1
@@ -52,26 +52,26 @@ while @running == 1
 
   # Wait for frames and poll input each frame
   frame_count = 0
-  while frame_count < frame_delay
+  while frame_count < FRAME_DELAY
     wait_vbl
     input = read_joypad
 
     # Update direction (can't reverse, only one turn per move)
     if turned == 0
-      if input == dir_up && prev_dir != dir_down
-        @direction = dir_up
+      if input == DIR_UP && prev_dir != DIR_DOWN
+        @direction = DIR_UP
         turned = 1
       end
-      if input == dir_down && prev_dir != dir_up
-        @direction = dir_down
+      if input == DIR_DOWN && prev_dir != DIR_UP
+        @direction = DIR_DOWN
         turned = 1
       end
-      if input == dir_left && prev_dir != dir_right
-        @direction = dir_left
+      if input == DIR_LEFT && prev_dir != DIR_RIGHT
+        @direction = DIR_LEFT
         turned = 1
       end
-      if input == dir_right && prev_dir != dir_left
-        @direction = dir_right
+      if input == DIR_RIGHT && prev_dir != DIR_LEFT
+        @direction = DIR_RIGHT
         turned = 1
       end
     end
@@ -83,13 +83,13 @@ while @running == 1
   new_x = @snake_x[0]
   new_y = @snake_y[0]
 
-  new_y -= 1 if @direction == dir_up
-  new_y += 1 if @direction == dir_down
-  new_x -= 1 if @direction == dir_left
-  new_x += 1 if @direction == dir_right
+  new_y -= 1 if @direction == DIR_UP
+  new_y += 1 if @direction == DIR_DOWN
+  new_x -= 1 if @direction == DIR_LEFT
+  new_x += 1 if @direction == DIR_RIGHT
 
   # Check wall collision
-  @running = 0 if new_x < 0 || new_x >= grid_w || new_y < 0 || new_y >= grid_h
+  @running = 0 if new_x < 0 || new_x >= GRID_W || new_y < 0 || new_y >= GRID_H
 
   # Check self collision
   if @running == 1
@@ -130,13 +130,13 @@ while @running == 1
     @snake_y[0] = new_y
 
     # Draw snake
-    draw_tile(@snake_x[0], @snake_y[0], tile_head)
-    draw_tile(@snake_x[1], @snake_y[1], tile_body) if @snake_len > 1
+    draw_tile(@snake_x[0], @snake_y[0], TILE_HEAD)
+    draw_tile(@snake_x[1], @snake_y[1], TILE_BODY) if @snake_len > 1
 
     # Spawn new food if eaten
     if ate_food == 1
-      @food_x = rand(grid_w)
-      @food_y = rand(grid_h)
+      @food_x = rand(GRID_W)
+      @food_y = rand(GRID_H)
       # Simple collision avoidance
       tries = 0
       while tries < 10
@@ -147,12 +147,12 @@ while @running == 1
           i += 1
         end
         if collision == 1
-          @food_x = rand(grid_w)
-          @food_y = rand(grid_h)
+          @food_x = rand(GRID_W)
+          @food_y = rand(GRID_H)
         end
         tries += 1
       end
-      draw_tile(@food_x, @food_y, tile_food)
+      draw_tile(@food_x, @food_y, TILE_FOOD)
     end
   end
 end

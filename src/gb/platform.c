@@ -16,26 +16,29 @@ void gb_platform_init(void) {
     // Additional init can go here
 }
 
-// Read joypad and return direction as integer
-// Returns: 0=none, 1=up, 2=down, 3=left, 4=right
+// Read joypad and return direction as symbol
+// Returns: :up, :down, :left, :right, or nil for no input
 void gb_read_joypad(mrbz_vm* vm, mrbz_value* ret) {
     uint8_t j;
-
-    (void)vm; // unused
+    uint8_t sym_idx;
 
     j = joypad();
 
     // Priority: up > down > left > right
     if (j & J_UP) {
-        MRBZ_SET_INT(*ret, 1);
+        sym_idx = mrbz_find_symbol(vm, "up");
+        MRBZ_SET_SYM(*ret, sym_idx);
     } else if (j & J_DOWN) {
-        MRBZ_SET_INT(*ret, 2);
+        sym_idx = mrbz_find_symbol(vm, "down");
+        MRBZ_SET_SYM(*ret, sym_idx);
     } else if (j & J_LEFT) {
-        MRBZ_SET_INT(*ret, 3);
+        sym_idx = mrbz_find_symbol(vm, "left");
+        MRBZ_SET_SYM(*ret, sym_idx);
     } else if (j & J_RIGHT) {
-        MRBZ_SET_INT(*ret, 4);
+        sym_idx = mrbz_find_symbol(vm, "right");
+        MRBZ_SET_SYM(*ret, sym_idx);
     } else {
-        MRBZ_SET_INT(*ret, 0);
+        MRBZ_SET_NIL(*ret);
     }
 }
 

@@ -106,6 +106,9 @@ typedef struct {
 // Get symbol name by index
 const char* mrbz_get_symbol(mrbz_vm* vm, uint8_t idx);
 
+// Find symbol index by name (returns 0xFF if not found)
+uint8_t mrbz_find_symbol(mrbz_vm* vm, const char* name);
+
 // Initialize a VM
 void mrbz_vm_init(mrbz_vm* vm);
 

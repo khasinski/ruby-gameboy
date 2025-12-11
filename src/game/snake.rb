@@ -11,17 +11,11 @@ TILE_HEAD = 129
 TILE_BODY = 130
 TILE_FOOD = 131
 
-# Direction constants: 0=none, 1=up, 2=down, 3=left, 4=right
-DIR_UP = 1
-DIR_DOWN = 2
-DIR_LEFT = 3
-DIR_RIGHT = 4
-
 # Initialize game state
 @snake_x = Array.new(MAX_SNAKE, 0)
 @snake_y = Array.new(MAX_SNAKE, 0)
 @snake_len = 3
-@direction = DIR_RIGHT
+@direction = :right
 @food_x = 15
 @food_y = 9
 @score = 0
@@ -58,20 +52,20 @@ while @running
 
     # Update direction (can't reverse, only one turn per move)
     unless turned
-      if input == DIR_UP && prev_dir != DIR_DOWN
-        @direction = DIR_UP
+      if input == :up && prev_dir != :down
+        @direction = :up
         turned = true
       end
-      if input == DIR_DOWN && prev_dir != DIR_UP
-        @direction = DIR_DOWN
+      if input == :down && prev_dir != :up
+        @direction = :down
         turned = true
       end
-      if input == DIR_LEFT && prev_dir != DIR_RIGHT
-        @direction = DIR_LEFT
+      if input == :left && prev_dir != :right
+        @direction = :left
         turned = true
       end
-      if input == DIR_RIGHT && prev_dir != DIR_LEFT
-        @direction = DIR_RIGHT
+      if input == :right && prev_dir != :left
+        @direction = :right
         turned = true
       end
     end
@@ -83,10 +77,10 @@ while @running
   new_x = @snake_x[0]
   new_y = @snake_y[0]
 
-  new_y -= 1 if @direction == DIR_UP
-  new_y += 1 if @direction == DIR_DOWN
-  new_x -= 1 if @direction == DIR_LEFT
-  new_x += 1 if @direction == DIR_RIGHT
+  new_y -= 1 if @direction == :up
+  new_y += 1 if @direction == :down
+  new_x -= 1 if @direction == :left
+  new_x += 1 if @direction == :right
 
   # Check wall collision
   @running = false if new_x < 0 || new_x >= GRID_W || new_y < 0 || new_y >= GRID_H

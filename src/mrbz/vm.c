@@ -55,6 +55,27 @@ const char* mrbz_get_symbol(mrbz_vm* vm, uint8_t idx) {
     return 0;
 }
 
+// Simple string comparison
+static uint8_t str_equal(const char* a, const char* b) {
+    while (*a && *b) {
+        if (*a != *b) return 0;
+        a++;
+        b++;
+    }
+    return *a == *b;
+}
+
+// Find symbol index by name
+uint8_t mrbz_find_symbol(mrbz_vm* vm, const char* name) {
+    uint8_t i;
+    for (i = 0; i < vm->sym_count; i++) {
+        if (vm->sym_names[i] && str_equal(vm->sym_names[i], name)) {
+            return i;
+        }
+    }
+    return 0xFF;
+}
+
 // Read 16-bit value from bytecode (big-endian)
 static uint16_t read_u16(const uint8_t* p) {
     return ((uint16_t)p[0] << 8) | (uint16_t)p[1];

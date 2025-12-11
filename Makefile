@@ -21,7 +21,7 @@ src/game/snake.ruby.c: src/game/snake.rb
 
 # Snake game ROM
 snake.gb: $(VM_SRCS) $(GB_SRCS) src/game/snake.ruby.c
-	$(LCC) $(CFLAGS) -DUSE_SNAKE -o $@ $(VM_SRCS) $(GB_SRCS)
+	$(LCC) $(CFLAGS) -o $@ $(VM_SRCS) $(GB_SRCS)
 
 # Run in mGBA
 run: snake.gb

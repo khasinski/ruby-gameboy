@@ -12,15 +12,9 @@
 extern void load_game_tiles(void);
 
 // Include appropriate bytecode based on build target
-#ifdef USE_SNAKE
 #include "../game/snake.ruby.c"
 #define GAME_BYTECODE snake_bytecode
 #define GAME_NAME "Snake"
-#else
-#include "../game/test.ruby.c"
-#define GAME_BYTECODE test_bytecode
-#define GAME_NAME "Test"
-#endif
 
 void main(void) {
     // Initialize display

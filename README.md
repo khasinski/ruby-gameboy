@@ -12,7 +12,7 @@ The VM interprets mruby bytecode compiled by `mrbc`, enabling Ruby code to run o
 
 ## Features
 
-- **mruby bytecode interpreter** with ~25 opcodes
+- **mruby bytecode interpreter** with ~50 opcodes
 - **Symbol table parsing** from bytecode for proper method dispatch
 - **Instance variables** (`@snake_x`, `@direction`, etc.)
 - **Arrays** with dynamic indexing

@@ -442,9 +442,8 @@ static const uint8_t gem_fa[] = { 0,0,0, 0,0,1,1,2,2,3,3,4,4, 5,6,7,8,9 };
 static const uint8_t gem_fb[] = { 1,2,3, 6,5,7,6,8,7,9,8,5,9, 10,10,10,10,10 };
 static const uint8_t gem_fc[] = { 2,3,4, 1,6,2,7,3,8,4,9,0,5, 6,7,8,9,5 };
 
-// Two 1bpp planes: pb[0..1919]=low bitplane, pb[1920..3839]=high bitplane
-// Per-pixel shading: color 1(bright)=low only, color 2(med)=high only, color 3(dark)=both
-static uint8_t pb[3840];
+// 1bpp pixel buffer (expanded to 2bpp on-the-fly during VRAM copy)
+static uint8_t pb[1920];
 
 // Fill triangle at 4x4 block resolution into both bitplanes (solid color 3)
 static void fill_tri_px(int16_t x0, int16_t y0,
@@ -531,9 +530,8 @@ void gb_update_and_render(mrbz_vm* vm, int16_t angle_x, int16_t angle_y,
     int16_t proj_x[GEM_VERTS], proj_y[GEM_VERTS];
     int16_t i, x, y, z, x2, z2, y2;
     int16_t nz, ax, ay, bx, by, cvx, cvy;
-    uint8_t a, b, c, row;
+    uint8_t a, b, c;
     uint16_t j, dst;
-    uint8_t src[8];
 
     (void)vm;
 
@@ -547,12 +545,17 @@ void gb_update_and_render(mrbz_vm* vm, int16_t angle_x, int16_t angle_y,
         x2 = (x * cs_y - z * sn_y) / 64;
         z2 = (x * sn_y + z * cs_y) / 64;
         y2 = (y * cs_x - z2 * sn_x) / 64;
-        proj_x[i] = 64 + x2;
-        proj_y[i] = 60 + y2;
+        proj_x[i] = 80 + x2;
+        proj_y[i] = 72 + y2;
     }
 
-    for (j = 0; j < 1920; j++) pb[j] = 0;
+    // Clear shadow buffer
+    for (j = 0; j < 360; j++) shadow_tiles[j] = TILE_EMPTY;
+#ifdef CGB
+    for (j = 0; j < 360; j++) shadow_attrs[j] = 0;
+#endif
 
+    // Fill faces into tile shadow buffer
     for (i = 0; i < GEM_FACES; i++) {
         a = gem_fa[i]; b = gem_fb[i]; c = gem_fc[i];
         ax = proj_x[a]; ay = proj_y[a];
@@ -562,24 +565,17 @@ void gb_update_and_render(mrbz_vm* vm, int16_t angle_x, int16_t angle_y,
         nz = (bx - ax) * (cvy - ay) - (by - ay) * (cvx - ax);
         if (nz >= -20) continue;
 
-        fill_tri_px(ax, ay, bx, by, cvx, cvy);
+        fill_tri_internal(ax, ay, bx, by, cvx, cvy, TILE_FILL);
     }
 
-    // Expand 1bpp to 2bpp (both planes identical = color 3), reverse order
-    for (i = 239; i >= 0; i--) {
-        for (row = 0; row < 8; row++)
-            src[row] = pb[i * 8 + row];
-        dst = (uint16_t)i * 16;
-        for (row = 0; row < 8; row++) {
-            pb[dst] = src[row];
-            pb[dst + 1] = src[row];
-            dst += 2;
-        }
-    }
-
-    // Copy to VRAM - GBDK handles timing, no LCD off
+    // Flush to VRAM (360 bytes, fast, no flash)
     wait_vbl_done();
-    set_bkg_data(0, 240, pb);
+    set_bkg_tiles(0, 0, 20, 18, shadow_tiles);
+#ifdef CGB
+    VBK_REG = 1;
+    set_bkg_tiles(0, 0, 20, 18, shadow_attrs);
+    VBK_REG = 0;
+#endif
 
     MRBZ_SET_NIL(*ret);
 }

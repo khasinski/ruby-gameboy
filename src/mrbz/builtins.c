@@ -12,6 +12,21 @@ extern void gb_clear_tile(mrbz_vm* vm, int16_t x, int16_t y, mrbz_value* ret);
 extern void gb_wait_vbl(mrbz_vm* vm, mrbz_value* ret);
 extern void gb_rand(mrbz_vm* vm, int16_t max, mrbz_value* ret);
 extern void gb_game_over(mrbz_vm* vm, int16_t score, mrbz_value* ret);
+extern void gb_sin_lut(mrbz_vm* vm, int16_t angle, mrbz_value* ret);
+extern void gb_cos_lut(mrbz_vm* vm, int16_t angle, mrbz_value* ret);
+extern void gb_draw_line(mrbz_vm* vm, int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t tile, mrbz_value* ret);
+extern void gb_clear_screen(mrbz_vm* vm, mrbz_value* ret);
+extern void gb_shadow_clear(mrbz_vm* vm, mrbz_value* ret);
+extern void gb_shadow_flush(mrbz_vm* vm, mrbz_value* ret);
+extern void gb_fill_triangle(mrbz_vm* vm, int16_t x0, int16_t y0,
+                              int16_t x1, int16_t y1,
+                              int16_t x2, int16_t y2,
+                              int16_t shade, mrbz_value* ret);
+extern void gb_render_faces(mrbz_vm* vm, uint8_t px_arr, uint8_t py_arr,
+                             uint8_t fa_arr, uint8_t fb_arr, uint8_t fc_arr,
+                             int16_t num_faces, mrbz_value* ret);
+extern void gb_update_and_render(mrbz_vm* vm, int16_t angle_x, int16_t angle_y,
+                                  mrbz_value* ret);
 
 // Simple string comparison (SDCC-compatible)
 static uint8_t str_eq(const char* a, const char* b) {
@@ -25,7 +40,7 @@ static uint8_t str_eq(const char* a, const char* b) {
 
 // Dispatch built-in calls based on symbol name
 void mrbz_builtin_call(mrbz_vm* vm, uint8_t sym_idx, uint8_t argc, uint8_t base_reg, mrbz_value* ret) {
-    int16_t x, y, tile, score, max, size, i;
+    int16_t x, y, tile, score, max, size, i, x2, y2;
     mrbz_value default_val;
     uint8_t arr_idx;
     const char* name;
@@ -93,6 +108,70 @@ void mrbz_builtin_call(mrbz_vm* vm, uint8_t sym_idx, uint8_t argc, uint8_t base_
                 }
                 MRBZ_SET_ARR(*ret, arr_idx);
             }
+        }
+    }
+    else if (str_eq(name, "sin_lut")) {
+        if (argc >= 1) {
+            x = vm->regs[base_reg].v.i;
+            gb_sin_lut(vm, x, ret);
+        }
+    }
+    else if (str_eq(name, "cos_lut")) {
+        if (argc >= 1) {
+            x = vm->regs[base_reg].v.i;
+            gb_cos_lut(vm, x, ret);
+        }
+    }
+    else if (str_eq(name, "draw_line")) {
+        if (argc >= 5) {
+            x = vm->regs[base_reg].v.i;
+            y = vm->regs[base_reg + 1].v.i;
+            x2 = vm->regs[base_reg + 2].v.i;
+            y2 = vm->regs[base_reg + 3].v.i;
+            tile = vm->regs[base_reg + 4].v.i;
+            gb_draw_line(vm, x, y, x2, y2, tile, ret);
+        }
+    }
+    else if (str_eq(name, "clear_screen")) {
+        gb_clear_screen(vm, ret);
+    }
+    else if (str_eq(name, "shadow_clear")) {
+        gb_shadow_clear(vm, ret);
+    }
+    else if (str_eq(name, "shadow_flush")) {
+        gb_shadow_flush(vm, ret);
+    }
+    else if (str_eq(name, "update_and_render")) {
+        if (argc >= 2) {
+            gb_update_and_render(vm,
+                vm->regs[base_reg].v.i,
+                vm->regs[base_reg + 1].v.i,
+                ret);
+        }
+    }
+    else if (str_eq(name, "render_faces")) {
+        if (argc >= 6) {
+            gb_render_faces(vm,
+                vm->regs[base_reg].v.arr,
+                vm->regs[base_reg + 1].v.arr,
+                vm->regs[base_reg + 2].v.arr,
+                vm->regs[base_reg + 3].v.arr,
+                vm->regs[base_reg + 4].v.arr,
+                vm->regs[base_reg + 5].v.i,
+                ret);
+        }
+    }
+    else if (str_eq(name, "fill_triangle")) {
+        if (argc >= 7) {
+            gb_fill_triangle(vm,
+                vm->regs[base_reg].v.i,
+                vm->regs[base_reg + 1].v.i,
+                vm->regs[base_reg + 2].v.i,
+                vm->regs[base_reg + 3].v.i,
+                vm->regs[base_reg + 4].v.i,
+                vm->regs[base_reg + 5].v.i,
+                vm->regs[base_reg + 6].v.i,
+                ret);
         }
     }
     else if (str_eq(name, "!=")) {

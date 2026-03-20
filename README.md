@@ -1,6 +1,6 @@
 # mrbz - Ruby on Game Boy
 
-A minimal Ruby virtual machine that runs mruby bytecode on Game Boy hardware. Includes a playable Snake game written in Ruby.
+A minimal Ruby virtual machine that runs mruby bytecode on Game Boy hardware. Includes a playable Snake game and a 3D rotating Ruby gem demo.
 
 ![Snake game running on Game Boy](snake.png)
 
@@ -8,7 +8,7 @@ A minimal Ruby virtual machine that runs mruby bytecode on Game Boy hardware. In
 
 This project was inspired by [mrubyz](https://github.com/yujiyokoo/mrubyz), a minimal mruby VM for Z80, most notably - Sega Master System. mrbz adapts and extends this concept for the Game Boy platform.
 
-The VM interprets mruby bytecode compiled by `mrbc`, enabling Ruby code to run on original Game Boy hardware (or emulators).
+The VM interprets mruby bytecode compiled by `mrbc`, enabling Ruby code to run on original Game Boy hardware (or emulators). Supports both DMG (original Game Boy) and Game Boy Color.
 
 ## Features
 
@@ -41,14 +41,17 @@ The VM interprets mruby bytecode compiled by `mrbc`, enabling Ruby code to run o
 ### Build & Run
 
 ```bash
-# Build the Snake game ROM
-make snake.gb
+# Snake game
+make              # DMG version
+make color        # Game Boy Color version
+make run          # Run DMG in mGBA
+make run-color    # Run GBC in mGBA
 
-# Run in mGBA
-make run
-
-# Or manually
-open -a mGBA snake.gb
+# 3D Ruby gem demo
+make ruby3d              # DMG version
+make ruby3d-color        # Game Boy Color version
+make run-ruby3d          # Run DMG in mGBA
+make run-ruby3d-color    # Run GBC in mGBA
 ```
 
 ## How It Works
@@ -83,7 +86,8 @@ src/
 │   ├── platform.h  # Platform API
 │   └── tiles.c     # Tile graphics
 └── game/           # Game code
-    └── snake.rb    # Snake game in Ruby
+    ├── snake.rb    # Snake game in Ruby
+    └── ruby3d.rb   # 3D gem demo in Ruby
 ```
 
 ## The Snake Game
@@ -94,6 +98,16 @@ The Snake game (`src/game/snake.rb`) is ~200 lines of Ruby:
 - Eat food (dots) to grow and score points
 - Avoid walls and your own tail
 - Game ends on collision, showing your score
+
+## Game Boy Color Support
+
+Building with `make color` produces a GBC-compatible ROM with color palettes. The same Ruby game code runs on both targets -- the platform layer automatically assigns palettes based on tile IDs:
+
+- Green snake (head brighter than body)
+- Red food
+- Soft green background
+
+The DMG build (`make`) continues to work as a standard greyscale ROM.
 
 ## Limitations
 

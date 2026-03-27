@@ -1,6 +1,6 @@
 # mrbz - Ruby on Game Boy
 
-A minimal Ruby virtual machine that runs mruby bytecode on Game Boy hardware. Includes a playable Snake game and a 3D rotating Ruby gem demo.
+A minimal Ruby virtual machine that runs mruby bytecode on Game Boy hardware. Includes a playable Snake game written in Ruby.
 
 ![Snake game running on Game Boy](snake.png)
 
@@ -41,17 +41,15 @@ The VM interprets mruby bytecode compiled by `mrbc`, enabling Ruby code to run o
 ### Build & Run
 
 ```bash
-# Snake game
-make              # DMG version
-make color        # Game Boy Color version
-make run          # Run DMG in mGBA
-make run-color    # Run GBC in mGBA
+# Build the Snake game ROM (original Game Boy)
+make
 
-# 3D Ruby gem demo
-make ruby3d              # DMG version
-make ruby3d-color        # Game Boy Color version
-make run-ruby3d          # Run DMG in mGBA
-make run-ruby3d-color    # Run GBC in mGBA
+# Build the Game Boy Color version (with color palettes)
+make color
+
+# Run in mGBA
+make run          # DMG version
+make run-color    # GBC version
 ```
 
 ## How It Works
@@ -86,12 +84,7 @@ src/
 │   ├── platform.h  # Platform API
 │   └── tiles.c     # Tile graphics
 └── game/           # Game code
-    ├── snake.rb    # Snake game in Ruby
-    └── ruby3d.rb   # 3D gem demo in Ruby
-tools/
-├── gen_frames.js       # Generate pre-rendered gem frames
-├── ruby3d_preview.html # Interactive 3D gem preview
-└── preview_frames.html # Frame-by-frame preview
+    └── snake.rb    # Snake game in Ruby
 ```
 
 ## The Snake Game

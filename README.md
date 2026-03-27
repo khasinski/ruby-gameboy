@@ -88,6 +88,10 @@ src/
 └── game/           # Game code
     ├── snake.rb    # Snake game in Ruby
     └── ruby3d.rb   # 3D gem demo in Ruby
+tools/
+├── gen_frames.js       # Generate pre-rendered gem frames
+├── ruby3d_preview.html # Interactive 3D gem preview
+└── preview_frames.html # Frame-by-frame preview
 ```
 
 ## The Snake Game
@@ -98,6 +102,7 @@ The Snake game (`src/game/snake.rb`) is ~200 lines of Ruby:
 - Eat food (dots) to grow and score points
 - Avoid walls and your own tail
 - Game ends on collision, showing your score
+- Press any button to restart after game over
 
 ## Game Boy Color Support
 

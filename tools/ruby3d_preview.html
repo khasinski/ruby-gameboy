@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head><title>Ruby Gem 3D Preview</title></head>
+<body style="margin:0;background:#222;display:flex;justify-content:center;align-items:center;height:100vh">
+<canvas id="c" width="640" height="576" style="image-rendering:pixelated"></canvas>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+
+// GBC resolution: 160x144, scaled 4x for display
+const GBC_W = 160, GBC_H = 144, SCALE = 4;
+const offscreen = document.createElement('canvas');
+offscreen.width = GBC_W;
+offscreen.height = GBC_H;
+const gbc = offscreen.getContext('2d');
+gbc.imageSmoothingEnabled = false;
+
+// Brilliant-cut diamond gem
+// Table (top flat face) - small octagon at y=-18
+const R1 = 24; // table radius
+// Girdle (widest) - large octagon at y=0
+const R2 = 40; // girdle radius
+const tableY = -18;
+const girdleY = 2;
+const culetY = 38; // bottom point
+
+const verts = [];
+// Table vertices (0-7)
+for (let i = 0; i < 8; i++) {
+  const a = i * Math.PI / 4;
+  verts.push([R1 * Math.cos(a), tableY, R1 * Math.sin(a)]);
+}
+// Girdle vertices (8-15)
+for (let i = 0; i < 8; i++) {
+  const a = i * Math.PI / 4;
+  verts.push([R2 * Math.cos(a), girdleY, R2 * Math.sin(a)]);
+}
+// Culet (16)
+verts.push([0, culetY, 0]);
+
+// Faces
+const faces = [];
+const faceColors = [];
+
+// Table top (fan from v0) - 6 triangles
+for (let i = 1; i < 7; i++) {
+  faces.push([0, i, i + 1]);
+  faceColors.push('#ff6666'); // brightest red
+}
+
+// Crown facets (table to girdle) - 16 triangles
+for (let i = 0; i < 8; i++) {
+  const t1 = i, t2 = (i + 1) % 8;
+  const g1 = 8 + i, g2 = 8 + (i + 1) % 8;
+  faces.push([t1, g1, t2]);
+  faceColors.push('#cc3333');
+  faces.push([t2, g1, g2]);
+  faceColors.push('#bb2828');
+}
+
+// Pavilion facets (girdle to culet) - 8 triangles
+for (let i = 0; i < 8; i++) {
+  const g1 = 8 + i, g2 = 8 + (i + 1) % 8;
+  faces.push([g1, 16, g2]);
+  faceColors.push('#992222');
+}
+
+let angleY = 0;
+const angleX = 0.0; // straight on, top face perpendicular
+
+function render() {
+  gbc.fillStyle = '#ddd8cc';
+  gbc.fillRect(0, 0, GBC_W, GBC_H);
+
+  const cy = Math.cos(angleY), sy = Math.sin(angleY);
+  const cx = Math.cos(angleX), sx = Math.sin(angleX);
+
+  // Transform vertices - project to 160x144
+  const projected = verts.map(([x, y, z]) => {
+    const rx = x * cy - z * sy;
+    const rz = x * sy + z * cy;
+    const ry = y * cx - rz * sx;
+    const rz2 = y * sx + rz * cx;
+    const scale = 200 / (200 + rz2);
+    return [80 + rx * scale * 1.5, 72 + ry * scale * 1.5, rz2];
+  });
+
+  // Sort faces by average Z (painter's algorithm, back to front)
+  const sortedFaces = faces.map((f, i) => ({ f, i })).sort((a, b) => {
+    const az = a.f.reduce((s, v) => s + projected[v][2], 0) / a.f.length;
+    const bz = b.f.reduce((s, v) => s + projected[v][2], 0) / b.f.length;
+    return bz - az;
+  });
+
+  for (const { f, i } of sortedFaces) {
+    const pts = f.map(v => projected[v]);
+    const [ax, ay] = pts[0], [bx, by] = pts[1], [cx2, cy2] = pts[2];
+
+    // Backface culling
+    const nz = (bx - ax) * (cy2 - ay) - (by - ay) * (cx2 - ax);
+    if (nz >= 0) continue;
+
+    // 3-level shading: top face always bright, sides by position
+    const avgX = pts.reduce((s, p) => s + p[0], 0) / pts.length;
+    const isTable = i < 6;
+    let color;
+    if (isTable) {
+      color = '#cc3838';                     // table: bright
+    } else if (avgX > 95) {
+      color = '#cc3838';                     // bright
+    } else if (avgX > 80) {
+      color = '#aa2828';                     // medium-bright
+    } else if (avgX > 65) {
+      color = '#882020';                     // medium-dark
+    } else {
+      color = '#661818';                     // dark
+    }
+
+    gbc.beginPath();
+    gbc.moveTo(Math.round(pts[0][0]), Math.round(pts[0][1]));
+    for (let j = 1; j < pts.length; j++)
+      gbc.lineTo(Math.round(pts[j][0]), Math.round(pts[j][1]));
+    gbc.closePath();
+    gbc.fillStyle = color;
+    gbc.fill();
+    // Fill again with same color to cover sub-pixel gaps
+    gbc.strokeStyle = color;
+    gbc.lineWidth = 1;
+    gbc.stroke();
+  }
+
+  // Scale up to display canvas
+  ctx.drawImage(offscreen, 0, 0, GBC_W, GBC_H, 0, 0, 640, 576);
+
+  angleY += 0.01;
+  requestAnimationFrame(render);
+}
+
+render();
+</script>
+</body>
+</html>

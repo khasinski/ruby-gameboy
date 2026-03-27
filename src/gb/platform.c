@@ -125,14 +125,20 @@ void gb_game_over(mrbz_vm* vm, int16_t score, mrbz_value* ret) {
     }
 
     // Display "GAME OVER" using printf
-    printf("\n\n\n   GAME OVER\n\n   Score: %d\n", score);
+    printf("\n\n\n   GAME OVER\n\n   Score: %d\n\n  Press any button", score);
+
+    // Wait for all buttons released, then wait for a press
+    while (joypad()) { wait_vbl_done(); }
+    while (!joypad()) { wait_vbl_done(); }
+
+    // Clear screen for restart
+    for (y = 0; y < 18; y++) {
+        for (x = 0; x < 20; x++) {
+            set_bkg_tile_xy(x, y, TILE_EMPTY);
+        }
+    }
 
     MRBZ_SET_NIL(*ret);
-
-    // Halt forever
-    while (1) {
-        wait_vbl_done();
-    }
 }
 
 // Quarter-wave sine table (0-90 degrees in 64 steps), scaled by 64
@@ -278,9 +284,13 @@ static uint8_t shadow_attrs[360];  // 20x18 CGB palette attributes
 
 // Shade tiles: color 3 (dark), color 2 (medium), color 1 (bright)
 static const uint8_t shade_tiles[] = {
-    TILE_OFFSET + 14,
-    TILE_OFFSET + 15,
-    TILE_OFFSET + 16,
+    TILE_OFFSET + 14, TILE_OFFSET + 15, TILE_OFFSET + 16,
+};
+static const uint8_t shade_left[] = {
+    TILE_OFFSET + 17, TILE_OFFSET + 18, TILE_OFFSET + 19,
+};
+static const uint8_t shade_right[] = {
+    TILE_OFFSET + 20, TILE_OFFSET + 21, TILE_OFFSET + 22,
 };
 
 void gb_shadow_clear(mrbz_vm* vm, mrbz_value* ret) {
@@ -323,11 +333,12 @@ static int16_t edge_interp(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16
 static void fill_tri_internal(int16_t x0, int16_t y0,
                                int16_t x1, int16_t y1,
                                int16_t x2, int16_t y2,
-                               uint8_t tile) {
+                               uint8_t shade_idx) {
     int16_t tmp;
     int16_t ty, ty_min, ty_max;
     int16_t scan_y, long_x, short_x, left_x, right_x, tx;
     uint16_t idx;
+    uint8_t tile = shade_tiles[shade_idx];
 
     if (y0 > y1) { tmp=x0; x0=x1; x1=tmp; tmp=y0; y0=y1; y1=tmp; }
     if (y0 > y2) { tmp=x0; x0=x2; x2=tmp; tmp=y0; y0=y2; y2=tmp; }
@@ -360,8 +371,19 @@ static void fill_tri_internal(int16_t x0, int16_t y0,
         if (right_x > 19) right_x = 19;
 
         for (tx = left_x; tx <= right_x; tx++) {
+            uint8_t t;
             idx = ty * 20 + tx;
-            shadow_tiles[idx] = tile;
+
+            // Use half-tiles at left/right edges for smoother outline
+            if (tx == left_x && (long_x & 7) >= 4) {
+                t = shade_right[shade_idx];
+            } else if (tx == right_x && (short_x & 7) < 4) {
+                t = shade_left[shade_idx];
+            } else {
+                t = tile;
+            }
+
+            shadow_tiles[idx] = t;
 #ifdef CGB
             shadow_attrs[idx] = 5;
 #endif
@@ -405,16 +427,12 @@ void gb_render_faces(mrbz_vm* vm, uint8_t px_arr, uint8_t py_arr,
         // Directional light from the right side
         {
             int16_t light = (ax + bx + cx) / 3 - 80;
-            if (light > 10) {
-                tile = shade_tiles[2];
-            } else if (light > -10) {
-                tile = shade_tiles[1];
-            } else {
-                tile = shade_tiles[0];
-            }
+            uint8_t si;
+            if (light > 10) si = 2;
+            else if (light > -10) si = 1;
+            else si = 0;
+            fill_tri_internal(ax, ay, bx, by, cx, cy, si);
         }
-
-        fill_tri_internal(ax, ay, bx, by, cx, cy, tile);
     }
 
     // Flush to VRAM during VBlank (no LCD off - no flash)
@@ -431,151 +449,73 @@ void gb_render_faces(mrbz_vm* vm, uint8_t px_arr, uint8_t py_arr,
 
 // --- Pixel-resolution 3D rendering (all in C) ---
 
-#define GEM_VERTS 11
-#define GEM_FACES 18
+// Brilliant-cut octagonal diamond
+// Table(0-7) R=30 y=-28 | Girdle(8-15) R=52 y=5 | Culet(16) y=50
+#define GEM_VERTS 17
+#define GEM_FACES 30
 
-static const int16_t gem_vx[] = {  0, 16,  8, -8,-16,   0, 40, 24,-24,-40,  0 };
-static const int16_t gem_vy[] = {-24,-24,-24,-24,-24,   0,  0,  0,  0,  0, 40 };
-static const int16_t gem_vz[] = {-16, -8, 16, 16, -8, -40,-16, 32, 32,-16,  0 };
+static const int16_t gem_vx[] = {
+     35, 25,  0,-25,-35,-25,  0, 25,
+     60, 42,  0,-42,-60,-42,  0, 42,  0 };
+static const int16_t gem_vy[] = {
+    -32,-32,-32,-32,-32,-32,-32,-32,
+      5,  5,  5,  5,  5,  5,  5,  5, 55 };
+static const int16_t gem_vz[] = {
+      0, 25, 35, 25,  0,-25,-35,-25,
+      0, 42, 60, 42,  0,-42,-60,-42,  0 };
 
-static const uint8_t gem_fa[] = { 0,0,0, 0,0,1,1,2,2,3,3,4,4, 5,6,7,8,9 };
-static const uint8_t gem_fb[] = { 1,2,3, 6,5,7,6,8,7,9,8,5,9, 10,10,10,10,10 };
-static const uint8_t gem_fc[] = { 2,3,4, 1,6,2,7,3,8,4,9,0,5, 6,7,8,9,5 };
+// Faces: table(6) + crown(16) + pavilion(8)
+// Same winding as the HTML preview
+static const uint8_t gem_fa[] = {
+    0,0,0,0,0,0,
+    0,1, 1,2, 2,3, 3,4, 4,5, 5,6, 6,7, 7,0,
+    8,9,10,11,12,13,14,15 };
+static const uint8_t gem_fb[] = {
+    1,2,3,4,5,6,
+    8,8, 9,9, 10,10, 11,11, 12,12, 13,13, 14,14, 15,15,
+    16,16,16,16,16,16,16,16 };
+static const uint8_t gem_fc[] = {
+    2,3,4,5,6,7,
+    1,9, 2,10, 3,11, 4,12, 5,13, 6,14, 7,15, 0,8,
+    9,10,11,12,13,14,15,8 };
 
-// 1bpp pixel buffer (expanded to 2bpp on-the-fly during VRAM copy)
-static uint8_t pb[1920];
+// Pre-rendered gem frame data (generated by tools/gen_frames.js)
+#include "gem_frames.h"
 
-// Fill triangle at 4x4 block resolution into both bitplanes (solid color 3)
-static void fill_tri_px(int16_t x0, int16_t y0,
-                         int16_t x1, int16_t y1,
-                         int16_t x2, int16_t y2) {
-    int16_t tmp, by, long_x, short_x, lx, rx, bx;
-    uint16_t row_base, byte_off;
-    uint8_t nibble;
-    int16_t py, px_start;
-
-    if (y0 > y1) { tmp=x0; x0=x1; x1=tmp; tmp=y0; y0=y1; y1=tmp; }
-    if (y0 > y2) { tmp=x0; x0=x2; x2=tmp; tmp=y0; y0=y2; y2=tmp; }
-    if (y1 > y2) { tmp=x1; x1=x2; x2=tmp; tmp=y1; y1=y2; y2=tmp; }
-    if (y0 == y2) return;
-
-    for (by = (y0 >> 2); by <= (y2 >> 2); by++) {
-        int16_t center_y = by * 4 + 2;
-        if (center_y < y0 || center_y > y2 || center_y < 0 || center_y >= FB_HEIGHT)
-            continue;
-
-        long_x = edge_interp(x0, y0, x2, y2, center_y);
-        if (center_y < y1) {
-            short_x = edge_interp(x0, y0, x1, y1, center_y);
-        } else {
-            short_x = edge_interp(x1, y1, x2, y2, center_y);
-        }
-        if (long_x > short_x) { tmp = long_x; long_x = short_x; short_x = tmp; }
-
-        lx = long_x < 0 ? 0 : long_x;
-        rx = short_x >= FB_WIDTH ? FB_WIDTH - 1 : short_x;
-        if (lx > rx) continue;
-
-        lx = lx >> 2;
-        rx = rx >> 2;
-
-        for (py = by * 4; py < by * 4 + 4; py++) {
-            if (py < 0 || py >= FB_HEIGHT) continue;
-            row_base = ((uint16_t)(py >> 3) << 7) | (py & 7);
-
-            for (bx = lx; bx <= rx; bx++) {
-                px_start = bx * 4;
-                if (px_start < 0 || px_start >= FB_WIDTH) continue;
-
-                byte_off = row_base + ((uint16_t)(px_start >> 3) << 3);
-                nibble = (px_start & 4) ? 0x0F : 0xF0;
-
-                pb[byte_off] |= nibble;
-                pb[1920 + byte_off] |= nibble;
-            }
-        }
-    }
-}
-
-void fb_init(void) {
-    uint8_t x, y;
-    uint16_t i;
-    volatile uint8_t* vram;
-
-    for (y = 0; y < 18; y++)
-        for (x = 0; x < 20; x++)
-            set_bkg_tile_xy(x, y, FB_BORDER_TILE);
-
-    for (y = 0; y < FB_TILES_Y; y++)
-        for (x = 0; x < FB_TILES_X; x++)
-            set_bkg_tile_xy(x + FB_OFFSET_X, y + FB_OFFSET_Y,
-                            y * FB_TILES_X + x);
-
-    vram = (volatile uint8_t*)0x8000;
-    for (i = 0; i < 16; i++)
-        vram[FB_BORDER_TILE * 16 + i] = 0;
-
+// Load generated tile patterns into VRAM (called at init)
+void gb_prerender_frames(void) {
+    set_bkg_data(0, GEM_TILE_COUNT, gem_tile_data);
 #ifdef CGB
-    VBK_REG = 1;
-    for (y = 0; y < FB_TILES_Y; y++)
-        for (x = 0; x < FB_TILES_X; x++)
-            set_bkg_tile_xy(x + FB_OFFSET_X, y + FB_OFFSET_Y, 5);
-    VBK_REG = 0;
+    {
+        uint8_t x, y;
+        // Set all tiles to palette 5 (shading baked into pixel colors)
+        VBK_REG = 1;
+        for (y = 0; y < 18; y++)
+            for (x = 0; x < 20; x++)
+                set_bkg_tile_xy(x, y, 5);
+        VBK_REG = 0;
+    }
 #endif
 }
 
-void gb_update_and_render(mrbz_vm* vm, int16_t angle_x, int16_t angle_y,
-                           mrbz_value* ret) {
-    int16_t sn_x, cs_x, sn_y, cs_y;
-    int16_t proj_x[GEM_VERTS], proj_y[GEM_VERTS];
-    int16_t i, x, y, z, x2, z2, y2;
-    int16_t nz, ax, ay, bx, by, cvx, cvy;
-    uint8_t a, b, c;
-    uint16_t j, dst;
-
+// Show a pre-rendered frame
+void gb_show_frame(mrbz_vm* vm, int16_t frame, mrbz_value* ret) {
+    uint8_t f;
     (void)vm;
 
-    sn_x = sin_lookup(angle_x);
-    cs_x = sin_lookup(angle_x + 64);
-    sn_y = sin_lookup(angle_y);
-    cs_y = sin_lookup(angle_y + 64);
+    f = (uint8_t)(frame % GEM_FRAME_COUNT);
 
-    for (i = 0; i < GEM_VERTS; i++) {
-        x = gem_vx[i]; y = gem_vy[i]; z = gem_vz[i];
-        x2 = (x * cs_y - z * sn_y) / 64;
-        z2 = (x * sn_y + z * cs_y) / 64;
-        y2 = (y * cs_x - z2 * sn_x) / 64;
-        proj_x[i] = 80 + x2;
-        proj_y[i] = 72 + y2;
-    }
-
-    // Clear shadow buffer
-    for (j = 0; j < 360; j++) shadow_tiles[j] = TILE_EMPTY;
-#ifdef CGB
-    for (j = 0; j < 360; j++) shadow_attrs[j] = 0;
-#endif
-
-    // Fill faces into tile shadow buffer
-    for (i = 0; i < GEM_FACES; i++) {
-        a = gem_fa[i]; b = gem_fb[i]; c = gem_fc[i];
-        ax = proj_x[a]; ay = proj_y[a];
-        bx = proj_x[b]; by = proj_y[b];
-        cvx = proj_x[c]; cvy = proj_y[c];
-
-        nz = (bx - ax) * (cvy - ay) - (by - ay) * (cvx - ax);
-        if (nz >= -20) continue;
-
-        fill_tri_internal(ax, ay, bx, by, cvx, cvy, TILE_FILL);
-    }
-
-    // Flush to VRAM (360 bytes, fast, no flash)
     wait_vbl_done();
-    set_bkg_tiles(0, 0, 20, 18, shadow_tiles);
-#ifdef CGB
-    VBK_REG = 1;
-    set_bkg_tiles(0, 0, 20, 18, shadow_attrs);
-    VBK_REG = 0;
-#endif
+    set_bkg_tiles(0, 0, 20, 18, gem_frames[f]);
 
     MRBZ_SET_NIL(*ret);
 }
+
+// Keep update_and_render as stub
+void gb_update_and_render(mrbz_vm* vm, int16_t angle_x, int16_t angle_y,
+                           mrbz_value* ret) {
+    (void)vm; (void)angle_x; (void)angle_y;
+    MRBZ_SET_NIL(*ret);
+}
+
+void fb_init(void) {}

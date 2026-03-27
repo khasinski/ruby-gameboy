@@ -16,6 +16,7 @@ extern void gb_sin_lut(mrbz_vm* vm, int16_t angle, mrbz_value* ret);
 extern void gb_cos_lut(mrbz_vm* vm, int16_t angle, mrbz_value* ret);
 extern void gb_draw_line(mrbz_vm* vm, int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t tile, mrbz_value* ret);
 extern void gb_clear_screen(mrbz_vm* vm, mrbz_value* ret);
+extern void gb_show_frame(mrbz_vm* vm, int16_t frame, mrbz_value* ret);
 extern void gb_shadow_clear(mrbz_vm* vm, mrbz_value* ret);
 extern void gb_shadow_flush(mrbz_vm* vm, mrbz_value* ret);
 extern void gb_fill_triangle(mrbz_vm* vm, int16_t x0, int16_t y0,
@@ -172,6 +173,11 @@ void mrbz_builtin_call(mrbz_vm* vm, uint8_t sym_idx, uint8_t argc, uint8_t base_
                 vm->regs[base_reg + 5].v.i,
                 vm->regs[base_reg + 6].v.i,
                 ret);
+        }
+    }
+    else if (str_eq(name, "show_frame")) {
+        if (argc >= 1) {
+            gb_show_frame(vm, vm->regs[base_reg].v.i, ret);
         }
     }
     else if (str_eq(name, "!=")) {

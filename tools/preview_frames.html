@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head><title>Gem Frame Preview</title></head>
+<body style="margin:20px;background:#222;color:#fff;font-family:monospace">
+<h3>8 frames at 160x144, 0-39&deg; rotation</h3>
+<div id="frames" style="display:flex;flex-wrap:wrap;gap:10px"></div>
+<script>
+const R1 = 24, R2 = 40;
+const tableY = -18, girdleY = 2, culetY = 38;
+const angleX = 0.0;
+const CX = 80, CY = 72;
+const W = 160, H = 144;
+const FRAMES = 8;
+const SCALE = 2;
+const colors = ['#ddd8cc', '#ee4444', '#cc2222', '#882020'];
+
+const verts = [];
+for (let i = 0; i < 8; i++) {
+  const a = i * Math.PI / 4;
+  verts.push([R1 * Math.cos(a), tableY, R1 * Math.sin(a)]);
+}
+for (let i = 0; i < 8; i++) {
+  const a = i * Math.PI / 4;
+  verts.push([R2 * Math.cos(a), girdleY, R2 * Math.sin(a)]);
+}
+verts.push([0, culetY, 0]);
+
+const faces = [];
+for (let i = 1; i < 7; i++) faces.push([0, i, i + 1]);
+for (let i = 0; i < 8; i++) {
+  const t1 = i, t2 = (i + 1) % 8, g1 = 8 + i, g2 = 8 + (i + 1) % 8;
+  faces.push([t1, g1, t2]);
+  faces.push([t2, g1, g2]);
+}
+for (let i = 0; i < 8; i++) {
+  const g1 = 8 + i, g2 = 8 + (i + 1) % 8;
+  faces.push([g1, 16, g2]);
+}
+
+// Software rasterizer (no anti-aliasing) - matches gen_frames.js exactly
+function fillTriSW(pixels, pts, colorIdx) {
+  let [x0,y0] = pts[0], [x1,y1] = pts[1], [x2,y2] = pts[2];
+  if (y0 > y1) { [x0,y0,x1,y1] = [x1,y1,x0,y0]; }
+  if (y0 > y2) { [x0,y0,x2,y2] = [x2,y2,x0,y0]; }
+  if (y1 > y2) { [x1,y1,x2,y2] = [x2,y2,x1,y1]; }
+  if (y0 === y2) return;
+  for (let py = Math.max(0, Math.floor(y0)); py <= Math.min(H-1, Math.floor(y2)); py++) {
+    const dy02 = y2-y0, dy01 = y1-y0, dy12 = y2-y1;
+    const longX = x0 + (x2-x0)*(py-y0)/dy02;
+    let shortX;
+    if (py < y1) shortX = dy01===0 ? x0 : x0 + (x1-x0)*(py-y0)/dy01;
+    else shortX = dy12===0 ? x1 : x1 + (x2-x1)*(py-y1)/dy12;
+    let lx = Math.max(0, Math.floor(Math.min(longX, shortX)));
+    let rx = Math.min(W-1, Math.floor(Math.max(longX, shortX)));
+    for (let px = lx; px <= rx; px++) pixels[py*W+px] = colorIdx;
+  }
+}
+
+function renderFrame(angleY) {
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  canvas.style.width = W * SCALE + 'px';
+  canvas.style.height = H * SCALE + 'px';
+  canvas.style.imageRendering = 'pixelated';
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+
+  const pixels = new Uint8Array(W * H);
+
+  const cy = Math.cos(angleY), sy = Math.sin(angleY);
+  const cx = Math.cos(angleX), sx = Math.sin(angleX);
+
+  const projected = verts.map(([x, y, z]) => {
+    const rx = x * cy - z * sy;
+    const rz = x * sy + z * cy;
+    const ry = y * cx - rz * sx;
+    const rz2 = y * sx + rz * cx;
+    const scale = 200 / (200 + rz2);
+    return [CX + rx * scale * 1.5, CY + ry * scale * 1.5, rz2];
+  });
+
+  const sorted = faces.map((f, i) => ({ f, i })).sort((a, b) => {
+    const az = a.f.reduce((s, v) => s + projected[v][2], 0);
+    const bz = b.f.reduce((s, v) => s + projected[v][2], 0);
+    return bz - az;
+  });
+
+  for (const { f, i } of sorted) {
+    const pts = f.map(v => projected[v]);
+    const [ax, ay] = pts[0], [bx, by] = pts[1], [cx2, cy2] = pts[2];
+    const nz = (bx - ax) * (cy2 - ay) - (by - ay) * (cx2 - ax);
+    if (nz >= 0) continue;
+
+    const avgX = pts.reduce((s, p) => s + p[0], 0) / 3;
+    const isTable = i < 6;
+    let colorIdx;
+    if (isTable) colorIdx = 2;
+    else if (avgX > 90) colorIdx = 1;
+    else if (avgX > 75) colorIdx = 2;
+    else colorIdx = 3;
+
+    fillTriSW(pixels, pts.map(p => [Math.round(p[0]), Math.round(p[1])]), colorIdx);
+  }
+
+  // Draw pixels to canvas
+  const imgData = ctx.createImageData(W, H);
+  const rgb = [[0xdd,0xd8,0xcc],[0xee,0x44,0x44],[0xcc,0x22,0x22],[0x88,0x20,0x20]];
+  for (let i = 0; i < W * H; i++) {
+    const c = rgb[pixels[i]];
+    imgData.data[i*4] = c[0]; imgData.data[i*4+1] = c[1];
+    imgData.data[i*4+2] = c[2]; imgData.data[i*4+3] = 255;
+  }
+  ctx.putImageData(imgData, 0, 0);
+
+  return canvas;
+}
+
+const container = document.getElementById('frames');
+for (let f = 0; f < FRAMES; f++) {
+  const angle = f * (Math.PI / 4) / FRAMES;
+  const div = document.createElement('div');
+  div.style.textAlign = 'center';
+  div.innerHTML = `<div>Frame ${f} (${(angle * 180 / Math.PI).toFixed(1)}&deg;)</div>`;
+  div.appendChild(renderFrame(angle));
+  container.appendChild(div);
+}
+</script>
+</body>
+</html>

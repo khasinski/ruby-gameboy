@@ -16,6 +16,9 @@ extern void load_game_tiles(void);
 #ifdef CGB
 extern void gb_init_cgb_palettes(void);
 #endif
+#ifdef GAME_RUBY3D
+extern void gb_prerender_frames(void);
+#endif
 
 // Include appropriate bytecode based on build target
 #ifdef GAME_RUBY3D
@@ -37,6 +40,9 @@ void main(void) {
     cpu_fast();  // CGB double speed for rendering
 #endif
 
+#ifdef GAME_RUBY3D
+    gb_prerender_frames();
+#else
     {
         uint8_t x, y;
         for (y = 0; y < 18; y++) {
@@ -45,6 +51,7 @@ void main(void) {
             }
         }
     }
+#endif
 
     // Turn on display
     DISPLAY_ON;

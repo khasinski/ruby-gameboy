@@ -17,7 +17,13 @@ extern void load_game_tiles(void);
 extern void gb_init_cgb_palettes(void);
 #endif
 
+#ifdef GAME_DEMO
+#include "../game/demo.ruby.c"
+#define GAME_BYTECODE demo_bytecode
+#else
 #include "../game/snake.ruby.c"
+#define GAME_BYTECODE snake_bytecode
+#endif
 
 void main(void) {
     // Load tile graphics
@@ -47,7 +53,7 @@ void main(void) {
         mrbz_value result;
 
         mrbz_vm_init(&vm);
-        mrbz_vm_run(&vm, &result, snake_bytecode);
+        mrbz_vm_run(&vm, &result, GAME_BYTECODE);
     }
 
     // Wait forever as fallback

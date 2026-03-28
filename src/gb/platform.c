@@ -132,6 +132,40 @@ void gb_game_over(mrbz_vm* vm, int16_t score, mrbz_value* ret) {
     MRBZ_SET_NIL(*ret);
 }
 
+// --- Sound ---
+
+// Pentatonic scale frequencies (C D E G A across 4 octaves = 20 notes)
+static const uint16_t note_freqs[] = {
+    1548, 1602, 1651, 1714, 1750,  // C4 D4 E4 G4 A4
+    1797, 1825, 1849, 1881, 1899,  // C5 D5 E5 G5 A5
+    1923, 1936, 1949, 1964, 1974,  // C6 D6 E6 G6 A6
+    1987, 1993, 1999, 2006, 2011   // C7 D7 E7 G7 A7
+};
+
+void gb_play_note(mrbz_vm* vm, int16_t note, mrbz_value* ret) {
+    uint16_t freq;
+    (void)vm;
+
+    if (note < 0) note = 0;
+    if (note > 19) note = 19;
+
+    freq = note_freqs[note];
+
+    // Enable sound if not already
+    NR52_REG = 0x80;
+    NR51_REG = 0xFF;
+    NR50_REG = 0x77;
+
+    // Channel 1: square wave
+    NR10_REG = 0x00;        // no sweep
+    NR11_REG = 0x80;        // 50% duty
+    NR12_REG = 0xF1;        // volume 15, decay 1
+    NR13_REG = freq & 0xFF;
+    NR14_REG = 0x80 | ((freq >> 8) & 0x07);  // trigger
+
+    MRBZ_SET_NIL(*ret);
+}
+
 #ifdef CGB
 
 // CGB palette colors (RGB555 format)

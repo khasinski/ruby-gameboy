@@ -32,6 +32,7 @@ void gb_clear_tile(mrbz_vm* vm, int16_t x, int16_t y, mrbz_value* ret);
 void gb_wait_vbl(mrbz_vm* vm, mrbz_value* ret);
 void gb_rand(mrbz_vm* vm, int16_t max, mrbz_value* ret);
 void gb_game_over(mrbz_vm* vm, int16_t score, mrbz_value* ret);
+void gb_play_note(mrbz_vm* vm, int16_t note, mrbz_value* ret);
 
 #ifdef CGB
 // Game Boy Color support

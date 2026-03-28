@@ -11,6 +11,7 @@ extern void gb_clear_tile(mrbz_vm* vm, int16_t x, int16_t y, mrbz_value* ret);
 extern void gb_wait_vbl(mrbz_vm* vm, mrbz_value* ret);
 extern void gb_rand(mrbz_vm* vm, int16_t max, mrbz_value* ret);
 extern void gb_game_over(mrbz_vm* vm, int16_t score, mrbz_value* ret);
+extern void gb_play_note(mrbz_vm* vm, int16_t note, mrbz_value* ret);
 
 // Simple string comparison (SDCC-compatible)
 static uint8_t str_eq(const char* a, const char* b) {
@@ -67,6 +68,11 @@ void mrbz_builtin_call(mrbz_vm* vm, uint8_t sym_idx, uint8_t argc, uint8_t base_
             gb_game_over(vm, score, ret);
         } else {
             gb_game_over(vm, 0, ret);
+        }
+    }
+    else if (str_eq(name, "play_note")) {
+        if (argc >= 1) {
+            gb_play_note(vm, vm->regs[base_reg].v.i, ret);
         }
     }
     else if (str_eq(name, "new")) {
